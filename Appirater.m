@@ -278,7 +278,10 @@ static BOOL _alwaysUseMainBundle = NO;
       return;
   }
   
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability"
     if (NSStringFromClass([SKStoreReviewController class]) != nil) {
+#pragma clang diagnostic pop
         [Appirater rateApp];
     } else {
         // Otherwise show a custom Alert
@@ -565,9 +568,14 @@ static BOOL _alwaysUseMainBundle = NO;
 
 - (void)hideRatingAlert {
 	if ([self isRatingAlertVisible]) {
-		if (_debug)
+        if (_debug) {
 			NSLog(@"APPIRATER Hiding Alert");
-		[self.ratingAlert dismissWithClickedButtonIndex:-1 animated:NO];
+        }
+        if ([self.ratingAlert respondsToSelector:@selector(dismissWithClickedButtonIndex:animated:)]) {
+            [self.ratingAlert dismissWithClickedButtonIndex:-1 animated:NO];
+        } else {
+            [self.ratingAlert dismissViewControllerAnimated:NO completion:nil];
+        }
 	}	
 }
 
@@ -664,9 +672,12 @@ static BOOL _alwaysUseMainBundle = NO;
     [userDefaults setBool:YES forKey:kAppiraterRatedCurrentVersion];
     [userDefaults synchronize];
 	
-  //Use the built SKStoreReviewController if available (available from iOS 10.3 upwards)
+    // Use the built SKStoreReviewController if available (available from iOS 10.3 upwards)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunguarded-availability"
     if (NSStringFromClass([SKStoreReviewController class]) != nil) {
         [SKStoreReviewController requestReview];
+#pragma clang diagnostic pop
         return;
     }
 
